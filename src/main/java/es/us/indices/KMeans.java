@@ -144,14 +144,14 @@ public class KMeans {
                         for (Punto punto2 : cluster.getPuntos()) {
                             if (!punto.equals(punto2)) {
                                 distB += punto.distanciaEuclideana(punto2);
-                                cont++;
+
                             }
                         }
                     }
                 }
             }
         }
-        b = distB / cont;
+        b = distB / clusters.size();
 
         cont = 0;
         for (Cluster cluster : clusters) {
@@ -164,7 +164,7 @@ public class KMeans {
                 }
             }
         }
-        a = distA / cont;
+        a = distA / clusters.size();
         //System.out.println("A: " + a);
         //System.out.println("B: " + b);
 
@@ -182,29 +182,25 @@ public class KMeans {
             // counting distances within
             double[] withinClusterDistance = new double[numberOfClusters];
 
-            for (int i = 0; i < numberOfClusters; i++) {
-                Dataset cluster = clusters[i];
-                Instance centroid = ClusterOperations.getCentroidCoordinates(cluster, distanceMeasure);
-                for (Instance point : cluster) {
-                    withinClusterDistance[i] += distanceMeasure.measure(point,
-                            centroid);
+            int i = 0;
+            for (Cluster cluster : clusters) {
+                for (Punto punto : cluster.getPuntos()) {
+                    withinClusterDistance[i] += punto.distanciaEuclideana(cluster.getCentroide());
                 }
+                withinClusterDistance[i] /= cluster.getPuntos().size();
+                i++;
             }
 
-            // averaging by cluster sizes and sum over all
-            for (int i = 0; i < numberOfClusters; i++) {
-                withinClusterDistance[i] /= clusters[i].size();
-            }
 
             double result = 0.0;
 
-            for (int i = 0; i < numberOfClusters; i++) {
+            for (i = 0; i < numberOfClusters; i++) {
                 double max = Double.NEGATIVE_INFINITY;
                 for (int j = 0; j < numberOfClusters; j++)
                     if (i != j) {
-                        double val = (withinClusterDistance[i] + withinClusterDistance[j])
-                                / distanceMeasure.measure(ClusterOperations.getCentroidCoordinates(clusters[i], distanceMeasure),
-                                ClusterOperations.getCentroidCoordinates(clusters[j], distanceMeasure));
+                        double val = (withinClusterDistance[i] + withinClusterDistance[j]);
+                                // / distanceMeasure.measure(ClusterOperations.getCentroidCoordinates(clusters[i], distanceMeasure),
+                                //ClusterOperations.getCentroidCoordinates(clusters[j], distanceMeasure));
                         if (val > max)
                             max = val;
                     }
@@ -212,6 +208,7 @@ public class KMeans {
             }
             return result / numberOfClusters;
         }
+
     }
 
     private Double calcularEntropy(List<Cluster> clusters) {
