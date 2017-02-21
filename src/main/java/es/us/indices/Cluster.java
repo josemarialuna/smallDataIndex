@@ -1,39 +1,45 @@
 package es.us.indices;
 
+import weka.core.Instance;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class Cluster {
-    private List<Punto> puntos = new ArrayList<Punto>();
-    private Punto centroide;
+    private List<Instance> puntos = new ArrayList<Instance>();
+    private Instance centroide;
     private boolean termino = false;
 
-    public Punto getCentroide() {
-	return centroide;
+    public Instance getCentroide() {
+        return centroide;
     }
 
-    public void setCentroide(Punto centroide) {
-	this.centroide = centroide;
+    public void setCentroide(Instance centroide) {
+        this.centroide = centroide;
     }
 
-    public List<Punto> getPuntos() {
-	return puntos;
+    public List<Instance> getInstances() {
+        return puntos;
+    }
+
+    public List<Instance> getPuntos() {
+        return puntos;
     }
 
     public boolean isTermino() {
-	return termino;
+        return termino;
     }
 
     public void setTermino(boolean termino) {
-	this.termino = termino;
+        this.termino = termino;
     }
 
-    public void limpiarPuntos() {
-	puntos.clear();
+    public void limpiarInstances() {
+        puntos.clear();
     }
 
     @Override
     public String toString() {
-	return centroide.toString();
+        return centroide.toString();
     }
 }

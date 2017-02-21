@@ -12,12 +12,12 @@ import java.util.List;
 public class Start {
     public static void main(String[] args) throws IOException {
         //CSVReader reader = new CSVReader(new FileReader("data.csv"));
-        String fileName = "Prueba";
+        String fileName = "C4-D4-I5";
         //CSVReader reader = new CSVReader(new FileReader("C:\\datasets\\" + fileName), ';');
-        CSVReader reader = new CSVReader(new FileReader("C:\\Users\\Josem\\Desktop\\datasets\\a1.txt"), ';');
+        CSVReader reader = new CSVReader(new FileReader("C:\\datasets\\art2\\" + fileName), ',');
 
-        FileWriter writerSil = new FileWriter("Silhoutte-" + fileName + ".csv");
-        FileWriter writerDunn = new FileWriter("Dunn-" + fileName + ".csv");
+        FileWriter writerSil = new FileWriter("Resultados-" + fileName + ".csv");
+        //FileWriter writerDunn = new FileWriter("Dunn-" + fileName + ".csv");
         List<String[]> myEntries = reader.readAll();
         List<Punto> puntos = new ArrayList<Punto>();
 
@@ -26,22 +26,48 @@ public class Start {
             puntos.add(p);
         }
 
-        int maxNumCluster = 30;
-
+        int maxNumCluster = 4;
+/*
         KMeans kmeans = new KMeans();
         long startTime = System.currentTimeMillis();
         System.out.println("Silhouette: " + fileName);
-        for (int k = 2; k <= maxNumCluster; k++) {
+        writerSil.write("k;Silhouette;Dunn;DavidBouldin;AverageDistance;MaxiumDiameter;MinimumDistance;SquaredSum;CalinskiHarabasz;AverageBetweenCluster\n");
+        for (int k = 4; k <= maxNumCluster; k++) {
+            System.out.println("KMeans: " + k);
             KMeansResultado resultado = kmeans.calcular(puntos, k);
+            System.out.println("HAY "+ resultado.getClusters().size()+" CLUSTERSSSS");
+
+            //PRINT POINTS WITH ITS CLUSTER NUMBER
+            FileWriter writer = new FileWriter(fileName + "-" + k + "-Points.txt");
+            int clusterNumber = 1;
+            for (Cluster c : resultado.getClusters()) {
+                for (Punto p : c.getPuntos()) {
+                    System.out.println(p.toString() + "," + clusterNumber);
+                    writer.write(p.toString() + "," + clusterNumber + "\n");
+                }
+                clusterNumber++;
+
+
+            }
+
             writerSil.write(k + ";");
             writerSil.write(resultado.getSilhouette() + ";");
             writerSil.write(resultado.getDunn() + ";");
-            writerSil.write(resultado.getDavidBouldin() + "\n");
+            writerSil.write(resultado.getDavidBouldin() + ";");
+            writerSil.write(resultado.getAverageDistance() + ";");
+            writerSil.write(resultado.getMaximumDiameter() + ";");
+            writerSil.write(resultado.getMinimumDistance() + ";");
+            writerSil.write(resultado.getSquaredSum() + ";");
+            writerSil.write(resultado.getCalinskiHarabasz() + ";");
+            writerSil.write(resultado.getAverageBetweenClusterDistance() + ";");
+
+            writerSil.write("\n");
         }
         long stopTime = System.currentTimeMillis();
         writerSil.write("TIME;" + (stopTime - startTime));
 
         writerSil.close();
+        */
 /*
         startTime = System.currentTimeMillis();
         System.out.println("Dunn: "+fileName);
