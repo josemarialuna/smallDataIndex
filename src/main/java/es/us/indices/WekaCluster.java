@@ -11,6 +11,8 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 public class WekaCluster {
 
@@ -28,22 +30,45 @@ public class WekaCluster {
 
     public static void main(String[] args) throws Exception {
 
-        int maxNumCluster = 10;
+        int minNumCluster = 2;
+        int maxNumCluster = 15;
 
+        String fileName = "C5-D20-I10000.txt";
+        String folderFileOLD = "C:\\datasets\\art2\\";
+        String folderFile = "C:\\Users\\Josem\\Documents\\randomDataset\\";
+        String pathFile = folderFile + fileName;
+        String outFile = "Resultados-" + fileName + ".csv";
 
-        String fileName = "C11-D20-I1000.csv";
+        if (args.length > 2) {
+            minNumCluster = Integer.parseInt(args[0]);
+            maxNumCluster = Integer.parseInt(args[1]);
+            pathFile = args[2];
+            outFile = args[3] + new SimpleDateFormat("yyyyMMddhhmm").format(Calendar.getInstance().getTime()) + ".txt";
+        }
 
-        DataSource source = new DataSource("C:\\datasets\\art2\\" + fileName);
+        System.out.println("*******************************");
+        System.out.println("*********CLUSTER WEKA**********");
+        System.out.println("*******************************");
+        System.out.println("Configuration:");
+        System.out.println("\tCLUSTERS: " + minNumCluster + "-" + maxNumCluster);
+        System.out.println("\tInput file: "+ pathFile);
+        System.out.println("\tOutput File: "+ outFile);
+
+        System.out.println("Running...\n");
+
+        System.out.println("Loading file..");
+        DataSource source = new DataSource(pathFile);
         Instances data = source.getDataSet();
-
+        System.out.println("File loaded\n");
         long startTime = System.currentTimeMillis();
 
-        FileWriter writerSil = new FileWriter("Resultados-" + fileName + ".csv");
-        writerSil.write("k;Silhouette;Dunn;DavidBouldin;AverageDistance;MaxiumDiameter;MinimumDistance;CalinskiHarabasz;AverageBetweenCluster\n");
+        FileWriter writerSil = new FileWriter(outFile);
+        writerSil.write("k;Silhouette;Dunn;DavidBouldin;AverageDistance;MaxiumDiameter;MinimumDistance;CalinskiHarabasz;AverageBetweenCluster;elapsedtime\n");
 
-        for (int k = 2; k <= maxNumCluster; k++) {
+        for (int k = minNumCluster; k <= maxNumCluster; k++) {
+            long startTimeK = System.currentTimeMillis();
             System.out.println("*** K = " + k + " ***");
-            System.out.println("Calculando KMeans");
+            System.out.println("Executing KMeans");
 
             KMeansIndices kmeans = new KMeansIndices(k);
 
@@ -54,7 +79,7 @@ public class WekaCluster {
             kmeans.setNumClusters(k);
             kmeans.buildClusterer(data);
             kmeans.generateStructure(data, k);
-            System.out.println("Calculando índices");
+            System.out.println("Calculating índices");
             kmeans.calculaIndices();
 
             writerSil.write(k + ";");
@@ -67,6 +92,11 @@ public class WekaCluster {
             //writerSil.write(kmeans.getSquaredSum() + ";");
             writerSil.write(kmeans.getCalinskiHarabasz() + ";");
             writerSil.write(kmeans.getAverageBetweenClusterDistance() + ";");
+
+            long stopTimeK = System.currentTimeMillis();
+            long elapsedTimeK = stopTimeK - startTimeK;
+            writerSil.write(String.valueOf(elapsedTimeK));
+            System.out.println("Time: " + elapsedTimeK);
 
             writerSil.write("\n");
             System.out.println("\n");
