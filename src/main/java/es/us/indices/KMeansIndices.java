@@ -31,6 +31,7 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
     }
 
     public void calculaIndices() {
+
         this.silhouette = calcularSilhouette();
         this.dunn = calcularDunn();
         this.davidBouldin = calcularDavidBouldin();
@@ -40,67 +41,77 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
         this.averageDistance = calcularAverageDistance();
         this.averageBetweenClusterDistance = calcularAverageBetweenClusterDistance();
         this.minimumDistance = calcularMinimumDistance();
+
     }
 
-    public void generateStructure(Instances data, int k) {
+    public void generateStructure(Instances data) {
 
         try {
             int[] assignments = super.getAssignments();
             for (int i = 0; i < assignments.length; i++) {
                 clusters.get(assignments[i]).getInstances().add(data.instance(i));
-                clusters.get(assignments[i]).setCentroide(super.getClusterCentroids().get(assignments[i]));
+                //if the centroid is not set
+                if (clusters.get(assignments[i]).getCentroide() == null) {
+                    clusters.get(assignments[i]).setCentroide(super.getClusterCentroids().get(assignments[i]));
+                }
             }
 
         } catch (Exception e) {
+            System.out.println("Excepcion en GENERATE STRUCTURE");
+            e.printStackTrace();
         }
 
 
     }
 
     private Double calcularDunn() {
-        double dunn;
+        double dunn = 0.0;
         double max = 0;
         double min = 0;
-
-        for (Cluster cluster : clusters) {
-            for (Instance punto : cluster.getInstances()) {
-                for (Cluster cluster2 : clusters) {
-                    if (!cluster.equals(cluster2)) {
-                        for (Instance punto2 : cluster.getInstances()) {
-                            if (!punto.equals(punto2)) {
-                                double dist = m_DistanceFunction.distance(punto, punto2);
-                                if (min != 0) {
-                                    if (dist < min) {
+        try {
+            for (Cluster cluster : clusters) {
+                for (Instance punto : cluster.getInstances()) {
+                    for (Cluster cluster2 : clusters) {
+                        if (!cluster.equals(cluster2)) {
+                            for (Instance punto2 : cluster.getInstances()) {
+                                if (!punto.equals(punto2)) {
+                                    double dist = m_DistanceFunction.distance(punto, punto2);
+                                    if (min != 0) {
+                                        if (dist < min) {
+                                            min = dist;
+                                        }
+                                    } else {
                                         min = dist;
                                     }
-                                } else {
-                                    min = dist;
                                 }
                             }
                         }
                     }
                 }
             }
-        }
 
-        for (Cluster cluster : clusters) {
-            for (Instance punto : cluster.getInstances()) {
-                for (Instance punto2 : cluster.getInstances()) {
-                    if (!punto.equals(punto2)) {
-                        double dist = m_DistanceFunction.distance(punto, punto2);
-                        if (dist > max) {
-                            max = dist;
+            for (Cluster cluster : clusters) {
+                for (Instance punto : cluster.getInstances()) {
+                    for (Instance punto2 : cluster.getInstances()) {
+                        if (!punto.equals(punto2)) {
+                            double dist = m_DistanceFunction.distance(punto, punto2);
+                            if (dist > max) {
+                                max = dist;
+                            }
                         }
-                    }
 
+                    }
                 }
             }
-        }
-        //System.out.println("MINIMO: " + min);
-        //System.out.println("MAXIMO: " + max);
+            //System.out.println("MINIMO: " + min);
+            //System.out.println("MAXIMO: " + max);
 
-        dunn = min / max;
+            dunn = min / max;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return dunn;
+
     }
 
     private Double calcularSilhouette() {
@@ -167,16 +178,26 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
 
 
             double result = 0.0;
-            for (i = 0; i < numberOfClusters; i++) {
-                double max = Double.NEGATIVE_INFINITY;
-                for (int j = 0; j < numberOfClusters; j++)
-                    if (i != j) {
-                        double val = (withinClusterDistance[i] + withinClusterDistance[j])
-                                / m_DistanceFunction.distance(clusters.get(i).getCentroide(), clusters.get(j).getCentroide());
-                        if (val > max)
-                            max = val;
+
+            try {
+                for (i = 0; i < numberOfClusters; i++) {
+                    //if the cluster is null
+                    if (clusters.get(i).getCentroide() != null) {
+                        double max = Double.NEGATIVE_INFINITY;
+                        for (int j = 0; j < numberOfClusters; j++)
+                            //if the cluster is null
+                            if (i != j && clusters.get(j).getCentroide() != null) {
+                                double val = (withinClusterDistance[i] + withinClusterDistance[j])
+                                        / m_DistanceFunction.distance(clusters.get(i).getCentroide(), clusters.get(j).getCentroide());
+                                if (val > max)
+                                    max = val;
+                                result = result + max;
+                            }
                     }
-                result = result + max;
+                }
+            } catch (Exception e) {
+                System.out.println("Excepcion al calcular DAVID BOULDIN");
+                e.printStackTrace();
             }
             return result / numberOfClusters;
         }
@@ -184,21 +205,32 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
     }
 
     private Double calcularCalinskiHarabasz() {
+        double calinski = 0.0;
         double squaredInterCluter = 0;
         double aux = 0;
         double cont = 0;
 
-        for (Cluster cluster : clusters) {
-            for (Cluster cluster2 : clusters) {
-                if (!cluster.equals(cluster2)) {
-                    aux = m_DistanceFunction.distance(cluster.getCentroide(), cluster2.getCentroide());
-                    squaredInterCluter += aux * aux;
-                    cont++;
+        try {
+            for (Cluster cluster : clusters) {
+                if (cluster.getCentroide() != null) {
+                    for (Cluster cluster2 : clusters) {
+                        if (cluster2.getCentroide() != null) {
+                            if (!cluster.equals(cluster2)) {
+                                aux = m_DistanceFunction.distance(cluster.getCentroide(), cluster2.getCentroide());
+                                squaredInterCluter += aux * aux;
+                                cont++;
+                            }
+                        }
+                    }
                 }
             }
-        }
 
-        return (this.calcularSquaredDistance()) / (squaredInterCluter / cont);
+            calinski = (this.calcularSquaredDistance()) / (squaredInterCluter / cont);
+        } catch (Exception e) {
+            System.out.println("Excepcion al calcular CALINSKI");
+            e.printStackTrace();
+        }
+        return calinski;
     }
 
     //Diámetro máximo entre dos puntos que pertenecen al mismo cluster.

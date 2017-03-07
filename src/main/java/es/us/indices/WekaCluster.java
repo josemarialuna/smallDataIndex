@@ -30,10 +30,10 @@ public class WekaCluster {
 
     public static void main(String[] args) throws Exception {
 
-        int minNumCluster = 2;
-        int maxNumCluster = 15;
+        int minNumCluster = 6;
+        int maxNumCluster = 16;
 
-        String fileName = "C5-D20-I10000.txt";
+        String fileName = "C11-D20-I2000.csv";
         String folderFileOLD = "C:\\datasets\\art2\\";
         String folderFile = "C:\\Users\\Josem\\Documents\\randomDataset\\";
         String pathFile = folderFile + fileName;
@@ -78,7 +78,7 @@ public class WekaCluster {
             kmeans.setPreserveInstancesOrder(true);
             kmeans.setNumClusters(k);
             kmeans.buildClusterer(data);
-            kmeans.generateStructure(data, k);
+            kmeans.generateStructure(data);
             System.out.println("Calculating índices");
             kmeans.calculaIndices();
 
