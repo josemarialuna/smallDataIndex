@@ -4,7 +4,9 @@ package es.us.indices;
  * Created by Josem on 16/02/2017.
  */
 
+import weka.clusterers.SimpleKMeans;
 import weka.core.Instances;
+import weka.core.SelectedTag;
 import weka.core.converters.ConverterUtils.DataSource;
 
 import java.io.BufferedReader;
@@ -30,12 +32,12 @@ public class WekaCluster {
 
     public static void main(String[] args) throws Exception {
 
-        int minNumCluster = 6;
-        int maxNumCluster = 16;
+        int minNumCluster = 2;
+        int maxNumCluster = 10;
 
-        String fileName = "C11-D20-I2000.csv";
-        String folderFileOLD = "C:\\datasets\\art2\\";
-        String folderFile = "C:\\Users\\Josem\\Documents\\randomDataset\\";
+        String fileName = "C11-D20-I1000.csv";
+        String folderFile = "C:\\datasets\\art2\\";
+        String folderFileOLD = "C:\\Users\\Josem\\Documents\\randomDataset\\";
         String pathFile = folderFile + fileName;
         String outFile = "Resultados-" + fileName + ".csv";
 
@@ -77,6 +79,7 @@ public class WekaCluster {
             //important parameter to set: preserver order, number of cluster.
             kmeans.setPreserveInstancesOrder(true);
             kmeans.setNumClusters(k);
+            kmeans.setInitializationMethod(new SelectedTag(SimpleKMeans.KMEANS_PLUS_PLUS, SimpleKMeans.TAGS_SELECTION));
             kmeans.buildClusterer(data);
             kmeans.generateStructure(data);
             System.out.println("Calculating índices");

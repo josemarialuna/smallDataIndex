@@ -182,18 +182,18 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
             try {
                 for (i = 0; i < numberOfClusters; i++) {
                     //if the cluster is null
-                    if (clusters.get(i).getCentroide() != null) {
-                        double max = Double.NEGATIVE_INFINITY;
-                        for (int j = 0; j < numberOfClusters; j++)
-                            //if the cluster is null
-                            if (i != j && clusters.get(j).getCentroide() != null) {
-                                double val = (withinClusterDistance[i] + withinClusterDistance[j])
-                                        / m_DistanceFunction.distance(clusters.get(i).getCentroide(), clusters.get(j).getCentroide());
-                                if (val > max)
-                                    max = val;
-                                result = result + max;
-                            }
-                    }
+                    //if (clusters.get(i).getCentroide() != null) {
+                    double max = Double.NEGATIVE_INFINITY;
+                    for (int j = 0; j < numberOfClusters; j++)
+                        //if the cluster is null && clusters.get(j).getCentroide() != null
+                        if (i != j) {
+                            double val = (withinClusterDistance[i] + withinClusterDistance[j])
+                                    / m_DistanceFunction.distance(clusters.get(i).getCentroide(), clusters.get(j).getCentroide());
+                            if (val > max)
+                                max = val;
+                            result = result + max;
+                        }
+                    //}
                 }
             } catch (Exception e) {
                 System.out.println("Excepcion al calcular DAVID BOULDIN");
@@ -207,22 +207,22 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
     private Double calcularCalinskiHarabasz() {
         double calinski = 0.0;
         double squaredInterCluter = 0;
-        double aux = 0;
+        double aux;
         double cont = 0;
 
         try {
             for (Cluster cluster : clusters) {
-                if (cluster.getCentroide() != null) {
-                    for (Cluster cluster2 : clusters) {
-                        if (cluster2.getCentroide() != null) {
-                            if (!cluster.equals(cluster2)) {
-                                aux = m_DistanceFunction.distance(cluster.getCentroide(), cluster2.getCentroide());
-                                squaredInterCluter += aux * aux;
-                                cont++;
-                            }
-                        }
+                //if (cluster.getCentroide() != null) {
+                for (Cluster cluster2 : clusters) {
+                    //if (cluster2.getCentroide() != null) {
+                    if (!cluster.equals(cluster2)) {
+                        aux = m_DistanceFunction.distance(cluster.getCentroide(), cluster2.getCentroide());
+                        squaredInterCluter += aux * aux;
+                        cont++;
                     }
+                    //}
                 }
+                //}
             }
 
             calinski = (this.calcularSquaredDistance()) / (squaredInterCluter / cont);
@@ -236,7 +236,7 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
     //Diámetro máximo entre dos puntos que pertenecen al mismo cluster.
     private Double calcularMaximumDiameter() {
         double maximumDiameter = 0;
-        double aux = 0;
+        double aux;
 
         for (Cluster cluster : clusters) {
             for (Instance punto : cluster.getInstances()) {
