@@ -32,15 +32,17 @@ WekaCluster is the main class, and it includes 4 arguments that can be set from 
 * Argument 1: maxNumCluster: it is the maximum cluster number that the dataset is going to be tested.
 * Argument 2: pathFile: it is the path of the input dataset. It must includes the complete pathfile.
 * Argument 3: outFile: it is the path of the output result file. It must includes the complete pathfile.
+* Argument 4: selector: you can choose between SMALLDATA, BIGDATA and ALL. SMALLDATA only execute smalldata indices. BIGDATA just execute BD-Silhouette and BD-Dunn. And ALL execute SMALLDATA and BIGDATA indices.
 
 ```
 int minNumCluster = 2;
 int maxNumCluster = 10;
+int selector = SMALLDATA;
 
 String fileName = "SmallDataset.csv";
 String folderFile = "C:\\datasets\\";
 String pathFile = folderFile + fileName;
-String outFile = "Results-" + fileName;
+String outFile = getFileNameOutput(selector, fileName);
 ```
 For this configuration the application load a file called SmallDataset.csv in "C:/datasets" and the result file will be saved as "Results-SmallDataset.csv"in the application folder.
 
@@ -49,8 +51,8 @@ For this configuration the application load a file called SmallDataset.csv in "C
 If we preffer executing in a terminal using java we just have to:
 
 ```
-java -jar smallDataIndices.jar 2 10 C:/datasets/SmallDataset.csv Results.csv
-java -jar smallDataIndices.jar 10 20 datasets/dataset.csv results.csv
+java -jar smallDataIndices.jar 2 10 C:/datasets/SmallDataset.csv Results.csv ALL
+java -jar smallDataIndices.jar 10 20 datasets/dataset.csv results.csv SMALLDATA
 ```
 
 ## Built With
