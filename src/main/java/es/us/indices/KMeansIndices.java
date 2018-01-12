@@ -3,7 +3,9 @@ package es.us.indices;
 import weka.core.Instance;
 import weka.core.Instances;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 /**
@@ -11,15 +13,17 @@ import java.util.List;
  */
 public class KMeansIndices extends weka.clusterers.SimpleKMeans {
 
-    private double silhouette;
-    private double dunn;
-    private double davidBouldin;
-    private double calinskiHarabasz;
-    private double maximumDiameter;
-    private double squaredDistance;
-    private double averageDistance;
-    private double averageBetweenClusterDistance;
-    private double minimumDistance;
+    private Indice silhouette;
+    private Indice dunn;
+    private Indice bdSilhouette;
+    private Indice bdDunn;
+    private Indice davidBouldin;
+    private Indice calinskiHarabasz;
+    private Indice maximumDiameter;
+    private Indice squaredDistance;
+    private Indice averageDistance;
+    private Indice averageBetweenClusterDistance;
+    private Indice minimumDistance;
     private List<Cluster> clusters;
 
     public KMeansIndices(int k) {
@@ -34,6 +38,8 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
 
         this.silhouette = calcularSilhouette();
         this.dunn = calcularDunn();
+        this.bdSilhouette = calcularBDSilhouette();
+        this.bdDunn = calcularBDDunn();
         this.davidBouldin = calcularDavidBouldin();
         this.calinskiHarabasz = calcularCalinskiHarabasz();
         this.maximumDiameter = calcularMaximumDiameter();
@@ -41,6 +47,13 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
         this.averageDistance = calcularAverageDistance();
         this.averageBetweenClusterDistance = calcularAverageBetweenClusterDistance();
         this.minimumDistance = calcularMinimumDistance();
+
+    }
+
+    public void calculaIndicesBigData() {
+
+        this.bdSilhouette = calcularBDSilhouette();
+        this.bdDunn = calcularBDDunn();
 
     }
 
@@ -64,10 +77,11 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
 
     }
 
-    private Double calcularDunn() {
+    private Indice calcularDunn() {
         double dunn = 0.0;
         double max = 0;
         double min = 0;
+        long startTime = System.currentTimeMillis();
         try {
             for (Cluster cluster : clusters) {
                 for (Instance punto : cluster.getInstances()) {
@@ -110,17 +124,70 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return dunn;
+        long stopTime = System.currentTimeMillis();
+        long elapsedTime = stopTime - startTime;
+        return new Indice(dunn, elapsedTime);
 
     }
 
-    private Double calcularSilhouette() {
+    private Indice calcularBDDunn() {
+        double bdDunn = 0.0;
+        double max = 0;
+        double min = 0;
+
+        long startTime = System.currentTimeMillis();
+        try {
+
+            for (Cluster cluster : clusters) {
+                for (Cluster cluster2 : clusters) {
+                    if (!cluster.equals(cluster2) && cluster.getCentroide() != null && cluster2.getCentroide() != null) {
+                        double dist = m_DistanceFunction.distance(cluster.getCentroide(), cluster2.getCentroide());
+                        if (min != 0) {
+                            if (dist < min) {
+                                min = dist;
+                            }
+                        } else {
+                            min = dist;
+                        }
+                    }
+                }
+            }
+
+
+            //get the maximum distance of the points to the centroid of the cluster they belong to
+            for (Cluster cluster : clusters) {
+                if (cluster.getCentroide() != null) {
+                    for (Instance punto : cluster.getInstances()) {
+                        double dist = m_DistanceFunction.distance(punto, cluster.getCentroide());
+                        if (dist > max) {
+                            max = dist;
+                        }
+                    }
+                }
+            }
+            //System.out.println("MINIMO: " + min);
+            //System.out.println("MAXIMO: " + max);
+
+            bdDunn = min / max;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        long stopTime = System.currentTimeMillis();
+        long elapsedTime = stopTime - startTime;
+        return new Indice(bdDunn, elapsedTime);
+
+    }
+
+    private Indice calcularSilhouette() {
         double silhouette;
         double a;
         double distA = 0;
         double b;
         double distB = 0;
         double cont;
+
+        long startTime = System.currentTimeMillis();
 
         for (Cluster cluster : clusters) {
             for (Instance punto : cluster.getInstances()) {
@@ -154,11 +221,60 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
         //System.out.println("B: " + b);
 
         silhouette = b - a / Math.max(a, b);
-        return silhouette;
+        long stopTime = System.currentTimeMillis();
+        long elapsedTime = stopTime - startTime;
+        return new Indice(silhouette, elapsedTime);
     }
 
-    private Double calcularDavidBouldin() {
+    private Indice calcularBDSilhouette() {
+        double silhouette;
+        double a;
+        double distA = 0;
+        double b;
+        double distB = 0;
+        double cont = 0;
+
+        long startTime = System.currentTimeMillis();
+
+        for (Cluster cluster : clusters) {
+            if (cluster.getCentroide() != null) {
+                for (Cluster cluster2 : clusters) {
+                    if (cluster2.getCentroide() != null) {
+                        if (!cluster.equals(cluster2)) {
+                            distB += m_DistanceFunction.distance(cluster.getCentroide(), cluster2.getCentroide());
+                            cont++;
+                        }
+                    }
+                }
+            }
+        }
+
+        b = distB / cont;
+
+        cont = 0;
+        for (Cluster cluster : clusters) {
+            if (cluster.getCentroide() != null) {
+                for (Instance punto : cluster.getInstances()) {
+                    distA += m_DistanceFunction.distance(punto, cluster.getCentroide());
+                    cont++;
+                }
+            }
+        }
+        a = distA / cont;
+        //System.out.println("A: " + a);
+        //System.out.println("B: " + b);
+
+        silhouette = b - a / Math.max(a, b);
+        long stopTime = System.currentTimeMillis();
+        long elapsedTime = stopTime - startTime;
+        return new Indice(silhouette, elapsedTime);
+    }
+
+    private Indice calcularDavidBouldin() {
         int numberOfClusters = clusters.size();
+        double david = 0.0;
+
+        long startTime = System.currentTimeMillis();
 
         if (numberOfClusters == 1) {
             throw new RuntimeException(
@@ -178,65 +294,76 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
 
 
             double result = 0.0;
+            double max = Double.NEGATIVE_INFINITY;
 
             try {
                 for (i = 0; i < numberOfClusters; i++) {
                     //if the cluster is null
-                    //if (clusters.get(i).getCentroide() != null) {
-                    double max = Double.NEGATIVE_INFINITY;
-                    for (int j = 0; j < numberOfClusters; j++)
-                        //if the cluster is null && clusters.get(j).getCentroide() != null
-                        if (i != j) {
-                            double val = (withinClusterDistance[i] + withinClusterDistance[j])
-                                    / m_DistanceFunction.distance(clusters.get(i).getCentroide(), clusters.get(j).getCentroide());
-                            if (val > max)
-                                max = val;
-                            result = result + max;
-                        }
-                    //}
+                    if (clusters.get(i).getCentroide() != null) {
+
+                        for (int j = 0; j < numberOfClusters; j++)
+                            //if the cluster is null
+                            if (i != j && clusters.get(j).getCentroide() != null) {
+                                double val = (withinClusterDistance[i] + withinClusterDistance[j])
+                                        / m_DistanceFunction.distance(clusters.get(i).getCentroide(), clusters.get(j).getCentroide());
+                                if (val > max)
+                                    max = val;
+                            }
+                    }
+                    result = result + max;
                 }
             } catch (Exception e) {
                 System.out.println("Excepcion al calcular DAVID BOULDIN");
                 e.printStackTrace();
             }
-            return result / numberOfClusters;
+            david = result / numberOfClusters;
         }
 
+        long stopTime = System.currentTimeMillis();
+        long elapsedTime = stopTime - startTime;
+        return new Indice(david, elapsedTime);
     }
 
-    private Double calcularCalinskiHarabasz() {
+    private Indice calcularCalinskiHarabasz() {
         double calinski = 0.0;
         double squaredInterCluter = 0;
         double aux;
         double cont = 0;
 
+        long startTime = System.currentTimeMillis();
+
         try {
             for (Cluster cluster : clusters) {
-                //if (cluster.getCentroide() != null) {
-                for (Cluster cluster2 : clusters) {
-                    //if (cluster2.getCentroide() != null) {
-                    if (!cluster.equals(cluster2)) {
-                        aux = m_DistanceFunction.distance(cluster.getCentroide(), cluster2.getCentroide());
-                        squaredInterCluter += aux * aux;
-                        cont++;
+                if (cluster.getCentroide() != null) {
+                    for (Cluster cluster2 : clusters) {
+                        if (cluster2.getCentroide() != null) {
+                            if (!cluster.equals(cluster2)) {
+                                aux = m_DistanceFunction.distance(cluster.getCentroide(), cluster2.getCentroide());
+                                squaredInterCluter += aux * aux;
+                                cont++;
+                            }
+                        }
                     }
-                    //}
                 }
-                //}
             }
 
-            calinski = (this.calcularSquaredDistance()) / (squaredInterCluter / cont);
+            calinski = (this.calcularSquaredDistance().getResultado()) / (squaredInterCluter / cont);
         } catch (Exception e) {
             System.out.println("Excepcion al calcular CALINSKI");
             e.printStackTrace();
         }
-        return calinski;
+
+        long stopTime = System.currentTimeMillis();
+        long elapsedTime = stopTime - startTime;
+        return new Indice(calinski, elapsedTime);
     }
 
     //Diámetro máximo entre dos puntos que pertenecen al mismo cluster.
-    private Double calcularMaximumDiameter() {
+    private Indice calcularMaximumDiameter() {
         double maximumDiameter = 0;
         double aux;
+
+        long startTime = System.currentTimeMillis();
 
         for (Cluster cluster : clusters) {
             for (Instance punto : cluster.getInstances()) {
@@ -250,14 +377,19 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
                 }
             }
         }
-        return maximumDiameter;
+
+        long stopTime = System.currentTimeMillis();
+        long elapsedTime = stopTime - startTime;
+        return new Indice(maximumDiameter, elapsedTime);
     }
 
     //Media de distancia cuadrática entre los puntos del mismo cluster.
-    private Double calcularSquaredDistance() {
+    private Indice calcularSquaredDistance() {
         double squaredDistance = 0;
         double aux;
         double cont = 0;
+
+        long startTime = System.currentTimeMillis();
 
         for (Cluster cluster : clusters) {
             for (Instance punto : cluster.getInstances()) {
@@ -271,13 +403,17 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
             }
         }
 
-        return squaredDistance / cont;
+        long stopTime = System.currentTimeMillis();
+        long elapsedTime = stopTime - startTime;
+        return new Indice(squaredDistance / cont, elapsedTime);
     }
 
-    private Double calcularAverageDistance() {
+    private Indice calcularAverageDistance() {
         double averageDistance;
         double distA = 0;
         double cont = 0;
+
+        long startTime = System.currentTimeMillis();
 
         for (Cluster cluster : clusters) {
             for (Instance punto : cluster.getInstances()) {
@@ -291,13 +427,18 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
         }
         averageDistance = distA / cont;
 
-        return averageDistance;
+
+        long stopTime = System.currentTimeMillis();
+        long elapsedTime = stopTime - startTime;
+        return new Indice(averageDistance, elapsedTime);
     }
 
-    private Double calcularAverageBetweenClusterDistance() {
+    private Indice calcularAverageBetweenClusterDistance() {
         double averageDistanceBetween;
         double distA = 0;
         double cont = 0;
+
+        long startTime = System.currentTimeMillis();
 
         for (Cluster cluster : clusters) {
             for (Instance punto : cluster.getInstances()) {
@@ -315,13 +456,18 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
         }
         averageDistanceBetween = distA / cont;
 
-        return averageDistanceBetween;
+        long stopTime = System.currentTimeMillis();
+        long elapsedTime = stopTime - startTime;
+        return new Indice(averageDistanceBetween, elapsedTime);
+
     }
 
     //Distancia minima entre puntos de diferentes clusters
-    private Double calcularMinimumDistance() {
+    private Indice calcularMinimumDistance() {
         double minimumDistance = -1;
         double aux;
+
+        long startTime = System.currentTimeMillis();
 
         for (Cluster cluster : clusters) {
             for (Instance punto : cluster.getInstances()) {
@@ -337,29 +483,30 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
                                         minimumDistance = aux;
                                 }
                             }
-
                         }
                     }
                 }
             }
         }
-
-        return minimumDistance;
+        long stopTime = System.currentTimeMillis();
+        long elapsedTime = stopTime - startTime;
+        return new Indice(minimumDistance, elapsedTime);
     }
 
-    public double getMaximumDiameter() {
+
+    public Indice getMaximumDiameter() {
         return maximumDiameter;
     }
 
-    public void setMaximumDiameter(double maximumDiameter) {
+    public void setMaximumDiameter(Indice maximumDiameter) {
         this.maximumDiameter = maximumDiameter;
     }
 
-    public double getSilhouette() {
+    public Indice getSilhouette() {
         return silhouette;
     }
 
-    public void setSilhouette(double silhouette) {
+    public void setSilhouette(Indice silhouette) {
         this.silhouette = silhouette;
     }
 
@@ -371,60 +518,76 @@ public class KMeansIndices extends weka.clusterers.SimpleKMeans {
         this.clusters = clusters;
     }
 
-    public double getDunn() {
+    public Indice getDunn() {
         return dunn;
     }
 
-    public void setDunn(double dunn) {
+    public void setDunn(Indice dunn) {
         this.dunn = dunn;
     }
 
-    public double getDavidBouldin() {
+    public Indice getDavidBouldin() {
         return davidBouldin;
     }
 
-    public void setDavidBouldin(double davidBouldin) {
+    public void setDavidBouldin(Indice davidBouldin) {
         this.davidBouldin = davidBouldin;
     }
 
-    public double getCalinskiHarabasz() {
+    public Indice getCalinskiHarabasz() {
         return calinskiHarabasz;
     }
 
-    public void setCalinskiHarabasz(double calinskiHarabasz) {
+    public void setCalinskiHarabasz(Indice calinskiHarabasz) {
         this.calinskiHarabasz = calinskiHarabasz;
     }
 
-    public double getSquaredDistance() {
+    public Indice getSquaredDistance() {
         return squaredDistance;
     }
 
-    public void setSquaredDistance(double squaredDistance) {
+    public void setSquaredDistance(Indice squaredDistance) {
         this.squaredDistance = squaredDistance;
     }
 
-    public double getAverageDistance() {
+    public Indice getAverageDistance() {
         return averageDistance;
     }
 
-    public void setAverageDistance(double averageDistance) {
+    public void setAverageDistance(Indice averageDistance) {
         this.averageDistance = averageDistance;
     }
 
-    public double getAverageBetweenClusterDistance() {
+    public Indice getAverageBetweenClusterDistance() {
         return averageBetweenClusterDistance;
     }
 
-    public void setAverageBetweenClusterDistance(double averageBetweenClusterDistance) {
+    public void setAverageBetweenClusterDistance(Indice averageBetweenClusterDistance) {
         this.averageBetweenClusterDistance = averageBetweenClusterDistance;
     }
 
-    public double getMinimumDistance() {
+    public Indice getMinimumDistance() {
         return minimumDistance;
     }
 
-    public void setMinimumDistance(double minimumDistance) {
+    public void setMinimumDistance(Indice minimumDistance) {
         this.minimumDistance = minimumDistance;
+    }
+
+    public Indice getBdSilhouette() {
+        return bdSilhouette;
+    }
+
+    public void setBdSilhouette(Indice bdSilhouette) {
+        this.bdSilhouette = bdSilhouette;
+    }
+
+    public Indice getBdDunn() {
+        return bdDunn;
+    }
+
+    public void setBdDunn(Indice bdDunn) {
+        this.bdDunn = bdDunn;
     }
 }
 
