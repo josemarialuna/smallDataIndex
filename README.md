@@ -32,7 +32,7 @@ WekaCluster is the main class, and it includes 4 arguments that can be set from 
 * Argument 1: maxNumCluster: it is the maximum cluster number that the dataset is going to be tested.
 * Argument 2: pathFile: it is the path of the input dataset. It must includes the complete pathfile.
 * Argument 3: outFile: it is the path of the output result file. It must includes the complete pathfile.
-* Argument 4: selector: you can choose between SMALLDATA, BIGDATA and ALL. SMALLDATA only execute smalldata indices. BIGDATA just execute BD-Silhouette and BD-Dunn. And ALL execute SMALLDATA and BIGDATA indices.
+* Argument 4: selector: you can choose between SMALLDATA, BIGDATA and ALL. SMALLDATA only execute smalldata indices. BIGDATA just execute BD-Silhouette and BD-Dunn indices from [1]. And ALL execute SMALLDATA and BIGDATA indices.
 
 ```
 int minNumCluster = 2;
@@ -68,3 +68,9 @@ java -jar smallDataIndices.jar 10 20 datasets/dataset.csv results.csv SMALLDATA
 ## Acknowledgments
 
 * University of Waikato
+
+## References
+
+[1] Luna-Romera, J.M., García-Gutiérrez, J., Martínez-Ballesteros, M. et al. Prog Artif Intell (2017). https://doi.org/10.1007/s13748-017-0135-3
+
+Please, cite as: Luna-Romera, J.M., García-Gutiérrez, J., Martínez-Ballesteros, M. et al. Prog Artif Intell (2017). https://doi.org/10.1007/s13748-017-0135-3 (https://link.springer.com/article/10.1007%2Fs13748-017-0135-3)
