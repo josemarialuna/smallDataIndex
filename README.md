@@ -1,6 +1,18 @@
 # smallDataIndex
 
-This package contains Weka Cluster algorithm with a complete list of indices that will help you to decide the optimal number of clusters that the dataset could have.
+This package contains Weka Cluster algorithm with a complete list of indices that will help you to decide the optimal number of clusters that the dataset could have. The package includes the followings indices:
+*  Silhouette
+*  Dunn
+*  BD-Silhouette [1]
+*  BD-Dunn [1]
+*  Davies-Bouldin
+*  Calinski-Harabasz
+*  MaximumDiameter
+*  SquaredDistance
+*  AverageDistance
+*  AverageBetweenClusterDistance
+*  MinimumDistance.
+
 
 ## Getting Started
 
